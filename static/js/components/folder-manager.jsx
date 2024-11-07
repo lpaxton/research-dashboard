@@ -29,13 +29,16 @@ const FolderManager = ({ resultData, onBeforeSave, onSave }) => {
 
     const handleSave = async () => {
         if (!selectedFolder) {
-            setError('Please select or create a folder');
+            setError('Please select a folder');
             return;
         }
 
         try {
-            const completeData = onBeforeSave ? onBeforeSave() : resultData;
+            // Get latest data from onSave callback if provided
+            const dataToSave = onSave ? onSave() : resultData;
             
+            console.log('Saving data to folder:', dataToSave); // Debug log
+
             const response = await fetch('/api/folders/save', {
                 method: 'POST',
                 headers: {
@@ -43,15 +46,19 @@ const FolderManager = ({ resultData, onBeforeSave, onSave }) => {
                 },
                 body: JSON.stringify({
                     folderId: selectedFolder,
-                    result: completeData
+                    result: {
+                        ...dataToSave,
+                        custom_notes: dataToSave.custom_notes || '',
+                        ai_summary: dataToSave.ai_summary || '',
+                    }
                 }),
             });
 
             const data = await response.json();
             
             if (data.success) {
-                if (onSave) onSave();
-                setError(null);
+                showNotification('Saved successfully!');
+                console.log('Save response:', data); // Debug log
             } else {
                 throw new Error(data.error || 'Failed to save');
             }
