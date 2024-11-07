@@ -12,7 +12,7 @@ Install Doc: Research Dashboard
 
 ## Step 1: Clone the Repository
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/lpaxton/research-dashboard
 cd research-dashboard
 ```
 
