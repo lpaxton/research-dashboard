@@ -612,20 +612,16 @@ def get_folder_results(folder_id):
 def save_to_folder():
     try:
         data = request.get_json()
-        
         logger.debug(f"Received save request data: {data}")
         
         folder_id = data.get('folderId')
         result_data = data.get('result', {})
         
         if not folder_id or not result_data:
-            logger.error("Missing required data in save request")
             return jsonify({
                 'success': False,
                 'error': 'Folder ID and result data are required'
             }), 400
-        
-        logger.debug(f"Custom notes received: {result_data.get('custom_notes')}")
         
         # Create save data with explicit field mapping
         save_data = {
@@ -660,31 +656,23 @@ def save_to_folder():
                 }}
             )
             logger.info(f"Updated existing document: {update_result.modified_count} modified")
-            logger.debug(f"Updated with notes: {save_data['custom_notes']}")
             message = 'Result updated successfully'
         else:
             # Insert new document
             insert_result = db.saved_results.insert_one(save_data)
             logger.info(f"Inserted new document with ID: {insert_result.inserted_id}")
-            logger.debug(f"Inserted with notes: {save_data['custom_notes']}")
             message = 'Result saved successfully'
-        
-        # Verify save
-        saved_doc = db.saved_results.find_one({'folder_id': ObjectId(folder_id), 'url': result_data.get('url')})
-        logger.debug(f"Verification - saved document: {saved_doc}")
         
         return jsonify({
             'success': True,
-            'message': message,
-            'saved_notes': save_data['custom_notes']
+            'message': message
         })
     except Exception as e:
-        logger.error(f"Error saving to folder: {str(e)}", exc_info=True)
+        logger.error(f"Error saving to folder: {str(e)}")
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
-
 @app.route('/api/folders/<folder_id>/results/<result_id>', methods=['DELETE'])
 def delete_folder_content(folder_id, result_id):
     try:
