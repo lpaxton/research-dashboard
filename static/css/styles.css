@@ -1,0 +1,82 @@
+/* static/css/styles.css */
+.search-card {
+    transition: transform 0.2s;
+}
+
+.search-card:hover {
+    transform: translateY(-2px);
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    stroke-width: 1.5;
+}
+
+/*chatbot styles*/
+
+/* Add to your CSS file */
+.prose {
+    max-width: 65ch;
+    color: inherit;
+  }
+  
+  .prose p {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+  }
+  
+  .prose strong {
+    font-weight: 600;
+    color: inherit;
+  }
+  
+  .prose ul {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+    padding-left: 1.625em;
+    list-style-type: disc;
+  }
+  
+  .prose ol {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+    padding-left: 1.625em;
+    list-style-type: decimal;
+  }
+  
+  .prose li {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    padding-left: 0.375em;
+  }
+  
+  .prose code {
+    color: inherit;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 0.2em 0.4em;
+    border-radius: 0.375rem;
+    font-size: 0.875em;
+  }
+  
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4 {
+    color: inherit;
+    font-weight: 600;
+    margin-top: 2em;
+    margin-bottom: 1em;
+  }
+  
+  .prose h1 { font-size: 2em; }
+  .prose h2 { font-size: 1.5em; }
+  .prose h3 { font-size: 1.25em; }
+  .prose h4 { font-size: 1em; }
+  
+  .prose-invert code {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+/* Add any additional custom styles here */
+
+

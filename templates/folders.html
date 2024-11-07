@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Research Folders{% endblock %}
+
+{% block content %}
+<div id="app-root">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Research Folders</h1>
+
+        <!-- Folder Selector -->
+        <div class="mb-6">
+            <label for="folder-select" class="block text-sm font-medium text-gray-700 mb-2">Select Folder</label>
+            <select id="folder-select" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500">
+                <option value="">Choose a folder...</option>
+            </select>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Folder Contents -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Folder Contents</h2>
+                <div id="folder-contents" class="space-y-4 max-h-[70vh] overflow-y-auto">
+                    <!-- Folder contents will be populated here -->
+                </div>
+            </div>
+
+            <!-- AI Chat Assistant -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Research Assistant</h2>
+                <div id="chat-container" class="h-[70vh] flex flex-col">
+                    <div id="chat-messages" class="flex-1 overflow-y-auto mb-4 space-y-4"></div>
+                    <div class="flex items-center space-x-2">
+                        <input 
+                            type="text" 
+                            id="chat-input" 
+                            class="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500" 
+                            placeholder="Ask about your research..."
+                        >
+                        <button 
+                            id="send-message" 
+                            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                        >
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dist/folders.js') }}" type="module"></script>
+{% endblock %}

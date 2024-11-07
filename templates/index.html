@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Research Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-4 max-w-6xl mx-auto">
+    <!-- Header -->
+    <h1 class="text-3xl font-bold mb-6">Research Dashboard</h1>
+
+    <!-- Main Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Search Section -->
+        <div class="space-y-6">
+            <!-- DuckDuckGo Search -->
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-lg font-medium mb-2">
+                    DuckDuckGo Search
+                </h3>
+                <p class="text-sm text-gray-600 mb-3">
+                    Privacy-focused web search engine
+                </p>
+                <div class="flex space-x-2">
+                    <input 
+                        type="text" 
+                        data-engine="duckduckgo" 
+                        placeholder="Search DuckDuckGo..." 
+                        class="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+            </div>
+
+            <!-- arXiv Search -->
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-lg font-medium mb-2">
+                    arXiv Search
+                </h3>
+                <p class="text-sm text-gray-600 mb-3">
+                    Open archive for scholarly articles
+                </p>
+                <div class="flex space-x-2">
+                    <input 
+                        type="text" 
+                        data-engine="arxiv" 
+                        placeholder="Search arXiv..." 
+                        class="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+            </div>
+
+            <!-- bioRxiv Search -->
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-lg font-medium mb-2">
+                    bioRxiv Search
+                </h3>
+                <p class="text-sm text-gray-600 mb-3">
+                    Preprint server for biology research
+                </p>
+                <div class="flex space-x-2">
+                    <input 
+                        type="text" 
+                        data-engine="biorxiv" 
+                        placeholder="Search bioRxiv..." 
+                        class="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+            </div>
+
+            <!-- Semantic Scholar Search -->
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-lg font-medium mb-2">
+                    Semantic Scholar Search
+                </h3>
+                <p class="text-sm text-gray-600 mb-3">
+                    AI-powered research paper search
+                </p>
+                <div class="flex space-x-2">
+                    <input 
+                        type="text" 
+                        data-engine="semantic_scholar" 
+                        placeholder="Search Semantic Scholar..." 
+                        class="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="space-y-6">
+            <!-- Search Results -->
+            <div id="results-panel" class="bg-white p-4 rounded-lg shadow min-h-[50vh]">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Search Results</h2>
+                    <div class="flex items-center space-x-2">
+                        <div id="loading" class="hidden">
+                            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="results-container" class="space-y-4">
+                    <p class="text-gray-500">Enter a search query to see results</p>
+                </div>
+            </div>
+
+            <!-- Saved Items Panel -->
+            <div id="folder-panel" class="bg-white p-4 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Recently Saved Items</h2>
+                    <a 
+                        href="/folders" 
+                        class="text-blue-500 hover:text-blue-700 text-sm flex items-center space-x-1"
+                    >
+                        <span>View All Folders</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+                <div id="folders-container" class="space-y-4">
+                    <p class="text-gray-500">Your saved items will appear here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dist/main.js') }}" type="module"></script>
+{% endblock %}
