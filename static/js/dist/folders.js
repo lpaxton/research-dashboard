@@ -24579,10 +24579,24 @@
 
   // static/js/components/chat-assistant.jsx
   var import_react2 = __toESM(require_react(), 1);
-  var import_jsx_runtime = (
-    // Changed from error to errorMessage
-    __toESM(require_jsx_runtime(), 1)
-  );
+  var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
+  var formatMessage = (content) => {
+    if (!content)
+      return "";
+    return content.split("\n\n").map((paragraph) => `<p>${paragraph.trim()}</p>`).join("").replace(/^\d+\.\s+(.+)$/gm, "<li>$1</li>").replace(/(<li>.*<\/li>\n?)+/g, "<ol>$&</ol>").replace(/^[-•]\s+(.+)$/gm, "<li>$1</li>").replace(/(<li>.*<\/li>\n?)+/g, "<ul>$&</ul>").replace(/^(#{1,6})\s+(.+)$/gm, (_, hashes, text) => `<h${hashes.length} class="text-lg font-semibold mt-4 mb-2">${text.trim()}</h${hashes.length}>`).replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\*(.*?)\*/g, "<em>$1</em>").replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>');
+  };
+  var FormattedMessage = ({ content, type }) => {
+    const messageClass = type === "user" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-800";
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `p-4 rounded-lg max-w-[80%] prose ${messageClass}`, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+      "div",
+      {
+        className: "message-content",
+        dangerouslySetInnerHTML: {
+          __html: formatMessage(content)
+        }
+      }
+    ) });
+  };
   var ChatAssistant = ({ selectedFolder, folderContents }) => {
     const [messages, setMessages] = (0, import_react2.useState)([]);
     const [input, setInput] = (0, import_react2.useState)("");
@@ -24666,20 +24680,14 @@
     };
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex flex-col h-full", children: [
       errorMessage && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4", children: errorMessage }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex-1 overflow-y-auto mb-4 space-y-4", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex-1 overflow-y-auto mb-4 space-y-4 p-4", children: [
         !selectedFolder ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-center text-gray-500 p-4", children: "Select a folder to start chatting about its contents" }) : messages.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-center text-gray-500 p-4", children: "No messages yet. Start a conversation about the folder's contents!" }) : messages.map((message, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
           "div",
           {
             className: `flex items-start space-x-2 ${message.type === "user" ? "justify-end" : "justify-start"}`,
             children: [
               message.type === "assistant" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Bot, { className: "w-6 h-6 text-blue-500" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "div",
-                {
-                  className: `p-3 rounded-lg max-w-[80%] ${message.type === "user" ? "bg-blue-500 text-white" : "bg-gray-100"}`,
-                  children: message.content
-                }
-              ),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormattedMessage, { content: message.content, type: message.type }),
               message.type === "user" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(User, { className: "w-6 h-6 text-blue-500" })
             ]
           },
@@ -24687,7 +24695,7 @@
         )),
         loading && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center space-x-2", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Bot, { className: "w-6 h-6 text-blue-500" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "bg-gray-100 rounded-lg p-3", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex space-x-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "bg-gray-100 rounded-lg p-4", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex space-x-2", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-2 h-2 bg-gray-500 rounded-full animate-bounce" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-100" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-200" })
@@ -24786,7 +24794,9 @@
         setLoading(true);
         const response = await fetch("/api/folders", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({ name: newFolderName.trim() })
         });
         const data = await response.json();
@@ -25027,13 +25037,13 @@
                   }
                 )
               ] }),
-              item.ai_summary && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "mt-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "font-medium", children: "Summary:" }),
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "text-gray-600 text-sm whitespace-pre-line", children: item.ai_summary })
+              item.ai_summary && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "mt-4 bg-blue-50 p-3 rounded", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "font-medium text-gray-700", children: "AI Summary:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "text-gray-600 text-sm whitespace-pre-line mt-1", children: item.ai_summary })
               ] }),
-              item.custom_notes && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "mt-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "font-medium", children: "Notes:" }),
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "text-gray-600 text-sm", children: item.custom_notes })
+              item.custom_notes && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "mt-4 bg-gray-50 p-3 rounded", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "font-medium text-gray-700", children: "Notes:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "text-gray-600 text-sm mt-1", children: item.custom_notes })
               ] })
             ] }, item.id)),
             folderContents.length === 0 && !loading && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "text-center text-gray-500 py-4", children: "No items in this folder yet. Add some from the search results!" })
