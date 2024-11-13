@@ -24461,9 +24461,6 @@
   var import_react3 = __toESM(require_react(), 1);
   var import_client = __toESM(require_client(), 1);
 
-  // static/js/components/folder-manager.jsx
-  var import_react2 = __toESM(require_react(), 1);
-
   // node_modules/lucide-react/dist/esm/createLucideIcon.mjs
   var import_react = __toESM(require_react(), 1);
 
@@ -24534,6 +24531,7 @@
   ]);
 
   // static/js/components/folder-manager.jsx
+  var import_react2 = __toESM(require_react(), 1);
   var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
   var FolderManager = ({ resultData, onBeforeSave, onSave }) => {
     const [folders, setFolders] = (0, import_react2.useState)([]);
@@ -24558,11 +24556,12 @@
     };
     const handleSave = async () => {
       if (!selectedFolder) {
-        setError("Please select or create a folder");
+        setError("Please select a folder");
         return;
       }
       try {
-        const completeData = onBeforeSave ? onBeforeSave() : resultData;
+        const dataToSave = onSave ? onSave() : resultData;
+        console.log("Saving data to folder:", dataToSave);
         const response = await fetch("/api/folders/save", {
           method: "POST",
           headers: {
@@ -24570,14 +24569,17 @@
           },
           body: JSON.stringify({
             folderId: selectedFolder,
-            result: completeData
+            result: {
+              ...dataToSave,
+              custom_notes: dataToSave.custom_notes || "",
+              ai_summary: dataToSave.ai_summary || ""
+            }
           })
         });
         const data = await response.json();
         if (data.success) {
-          if (onSave)
-            onSave();
-          setError(null);
+          showNotification("Saved successfully!");
+          console.log("Save response:", data);
         } else {
           throw new Error(data.error || "Failed to save");
         }
@@ -24696,40 +24698,64 @@
   var folder_manager_default = FolderManager;
 
   // static/js/utils/search-utils.js
+  var showNotification2 = (message, type = "success") => {
+    const notification = document.createElement("div");
+    notification.className = `fixed bottom-4 right-4 ${type === "success" ? "bg-green-500" : "bg-red-500"} text-white px-6 py-3 rounded shadow-lg z-50`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.classList.add("opacity-0", "transition-opacity", "duration-500");
+      setTimeout(() => notification.remove(), 500);
+    }, 3e3);
+  };
   var createResultCard = (result, engine) => {
-    const resultId = `result-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const card = document.createElement("div");
-    card.className = "bg-white p-4 rounded-lg shadow mb-4 search-card";
-    const safeResult = {
+    const resultId = `result-${Date.now()}`;
+    const resultData = {
       ...result,
       id: resultId,
       engine,
-      custom_notes: result.custom_notes || "",
-      ai_summary: result.ai_summary || "",
       description: result.description || "",
-      title: result.title || "",
-      url: result.url || "#"
+      ai_summary: result.ai_summary || "",
+      custom_notes: result.custom_notes || "",
+      url: result.url || "",
+      title: result.title || ""
     };
-    window[`resultData_${resultId}`] = safeResult;
-    const summarizeAction = `
-        (function(e) {
-            e.preventDefault();
-            window.generateSummary('${resultId}');
-        })(event)
-    `;
+    window[`resultData_${resultId}`] = resultData;
+    const safeUrl = resultData.url.replace(/"/g, "&quot;");
+    const card = document.createElement("div");
+    card.className = "bg-white p-4 rounded-lg shadow mb-4 search-card";
     card.innerHTML = `
         <div class="space-y-2">
-            <a href="${safeResult.url}" target="_blank" class="text-lg font-medium text-blue-600 hover:text-blue-800">
-                ${safeResult.title}
-            </a>
-            <p class="text-gray-600">${safeResult.description}</p>
+            <div class="flex items-center justify-between">
+                <a 
+                    href="${safeUrl}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-lg font-medium text-blue-600 hover:text-blue-800 flex items-center"
+                >
+                    ${resultData.title}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                </a>
+                ${resultData.pdf_url ? `
+                    <button 
+                        onclick="window.handlePdfDownload('${resultData.pdf_url}', '${engine}')"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded flex items-center space-x-1 text-sm"
+                    >
+                        <span>PDF</span>
+                    </button>
+                ` : ""}
+            </div>
+            
+            <p class="text-gray-600">${resultData.description}</p>
             
             <div id="summary-${resultId}" class="mt-4">
-                ${safeResult.ai_summary ? `
+                ${resultData.ai_summary ? `
                     <div class="prose">
                         <h4 class="text-lg font-semibold mb-2">AI Summary</h4>
                         <div class="summary-content whitespace-pre-line text-gray-700 bg-blue-50 p-3 rounded">
-                            ${safeResult.ai_summary}
+                            ${resultData.ai_summary}
                         </div>
                     </div>
                 ` : ""}
@@ -24741,24 +24767,14 @@
                     id="notes-${resultId}"
                     class="w-full h-24 p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                     placeholder="Add your notes here..."
-                    onchange="window.updateNotes('${resultId}')"
-                >${safeResult.custom_notes}</textarea>
+                >${resultData.custom_notes}</textarea>
             </div>
             
             <div class="flex space-x-2 mt-4">
-                ${safeResult.pdf_url ? `
-                    <button 
-                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center space-x-2"
-                        onclick="window.downloadPdf('${safeResult.pdf_url}', '${engine}')"
-                    >
-                        <span>PDF</span>
-                    </button>
-                ` : ""}
-                
                 ${["arxiv", "biorxiv", "semantic_scholar"].includes(engine) ? `
                     <button 
+                        onclick="window.handleSummarize('${resultId}')"
                         class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center space-x-2"
-                        onclick="${summarizeAction}"
                     >
                         <span>Summarize</span>
                     </button>
@@ -24770,29 +24786,115 @@
     `;
     const folderManagerContainer = card.querySelector(`#folder-manager-${resultId}`);
     const root = (0, import_client.createRoot)(folderManagerContainer);
-    root.render(import_react3.default.createElement(folder_manager_default, {
-      resultData: window[`resultData_${resultId}`],
-      onBeforeSave: () => {
-        const notesElem = card.querySelector(`#notes-${resultId}`);
-        const summaryElem = card.querySelector(".summary-content");
-        const updatedResult = {
-          ...window[`resultData_${resultId}`],
-          custom_notes: notesElem ? notesElem.value : "",
-          ai_summary: summaryElem ? summaryElem.textContent.trim() : safeResult.ai_summary
-        };
-        window[`resultData_${resultId}`] = updatedResult;
-        return updatedResult;
-      }
-    }));
+    if (root) {
+      root.render(import_react3.default.createElement(folder_manager_default, {
+        resultData,
+        onSave: () => {
+          const notesElem = card.querySelector(`#notes-${resultId}`);
+          const summaryElem = card.querySelector(".summary-content");
+          const updatedResult = {
+            ...resultData,
+            custom_notes: notesElem ? notesElem.value : "",
+            ai_summary: summaryElem ? summaryElem.textContent.trim() : resultData.ai_summary
+          };
+          window[`resultData_${resultId}`] = updatedResult;
+          console.log("Saving updated result:", updatedResult);
+          return updatedResult;
+        }
+      }));
+    }
     return card;
   };
-  var showNotification = (message, type = "success") => {
-    const notification = document.createElement("div");
-    notification.className = `fixed bottom-4 right-4 ${type === "success" ? "bg-green-500" : "bg-red-500"} text-white px-6 py-3 rounded shadow-lg z-50`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3e3);
+  var handlePdfDownload = async (pdfUrl, engine) => {
+    if (!pdfUrl) {
+      showNotification2("No PDF URL provided", "error");
+      return;
+    }
+    try {
+      if (engine === "arxiv") {
+        window.open(pdfUrl, "_blank");
+        return;
+      }
+      const response = await fetch("/proxy_pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ url: pdfUrl })
+      });
+      if (!response.ok)
+        throw new Error("PDF download failed");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `paper_${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      showNotification2("Failed to download PDF", "error");
+    }
   };
+  var handleSummarize = async (resultId) => {
+    const resultData = window[`resultData_${resultId}`];
+    const summaryContainer = document.getElementById(`summary-${resultId}`);
+    if (!resultData || !summaryContainer) {
+      console.error("Missing required data for summary");
+      return;
+    }
+    try {
+      summaryContainer.innerHTML = `
+            <div class="animate-pulse flex space-x-4 items-center">
+                <div class="flex-1 space-y-4 py-1">
+                    <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div class="h-4 bg-gray-200 rounded"></div>
+                </div>
+            </div>
+        `;
+      const response = await fetch("/summarize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          url: resultData.url,
+          title: resultData.title
+        })
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.success) {
+        summaryContainer.innerHTML = `
+                <div class="prose">
+                    <h4 class="text-lg font-semibold mb-2">AI Summary</h4>
+                    <div class="summary-content whitespace-pre-line text-gray-700 bg-blue-50 p-3 rounded">
+                        ${data.summary}
+                    </div>
+                </div>
+            `;
+        resultData.ai_summary = data.summary;
+        window[`resultData_${resultId}`] = resultData;
+        showNotification2("Summary generated successfully");
+      } else {
+        throw new Error(data.error || "Failed to generate summary");
+      }
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      summaryContainer.innerHTML = `
+            <div class="text-red-500 p-3 rounded-lg bg-red-50">
+                Failed to generate summary: ${error.message}
+            </div>
+        `;
+      showNotification2("Failed to generate summary", "error");
+    }
+  };
+  window.handlePdfDownload = handlePdfDownload;
+  window.handleSummarize = handleSummarize;
 
   // static/js/main.js
   window.updateNotes = (resultId) => {
@@ -24827,7 +24929,7 @@
       document.body.removeChild(a);
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      showNotification("Failed to download PDF", "error");
+      showNotification2("Failed to download PDF", "error");
     }
   };
   window.generateSummary = async (resultId) => {
@@ -24905,14 +25007,14 @@
       });
       const data = await response.json();
       if (data.success) {
-        showNotification("Saved successfully!");
+        showNotification2("Saved successfully!");
         return true;
       } else {
         throw new Error(data.error || "Failed to save to folder");
       }
     } catch (error) {
       console.error("Error saving to folder:", error);
-      showNotification("Failed to save to folder", "error");
+      showNotification2("Failed to save to folder", "error");
       return false;
     }
   };
