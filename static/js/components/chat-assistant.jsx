@@ -3,6 +3,49 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, Bot, User } from 'lucide-react';
 
 
+const formatMessage = (content) => {
+    if (!content) return '';
+
+    // Convert markdown-style formatting to HTML
+    return content
+        // Handle paragraphs (double newlines)
+        .split('\n\n')
+        .map(paragraph => `<p>${paragraph.trim()}</p>`)
+        .join('')
+        // Handle numbered lists
+        .replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>\n?)+/g, '<ol>$&</ol>')
+        // Handle bullet points
+        .replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+        // Handle headings
+        .replace(/^(#{1,6})\s+(.+)$/gm, (_, hashes, text) => 
+            `<h${hashes.length} class="text-lg font-semibold mt-4 mb-2">${text.trim()}</h${hashes.length}>`)
+        // Handle bold text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // Handle italic text
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // Handle code snippets
+        .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>');
+};
+
+// Message component with formatting
+const FormattedMessage = ({ content, type }) => {
+    const messageClass = type === 'user' 
+        ? 'bg-blue-500 text-white' 
+        : 'bg-gray-100 text-gray-800';
+
+    return (
+        <div className={`p-4 rounded-lg max-w-[80%] prose ${messageClass}`}>
+            <div
+                className="message-content"
+                dangerouslySetInnerHTML={{
+                    __html: formatMessage(content)
+                }}
+            />
+        </div>
+    );
+};
 
 const ChatAssistant = ({ selectedFolder, folderContents }) => {
     const [messages, setMessages] = useState([]);
@@ -97,13 +140,13 @@ const ChatAssistant = ({ selectedFolder, folderContents }) => {
 
     return (
         <div className="flex flex-col h-full">
-            {errorMessage && (  // Changed from error to errorMessage
+            {errorMessage && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
                     {errorMessage}
                 </div>
             )}
             
-            <div className="flex-1 overflow-y-auto mb-4 space-y-4">
+            <div className="flex-1 overflow-y-auto mb-4 space-y-4 p-4">
                 {!selectedFolder ? (
                     <div className="text-center text-gray-500 p-4">
                         Select a folder to start chatting about its contents
@@ -121,15 +164,7 @@ const ChatAssistant = ({ selectedFolder, folderContents }) => {
                             }`}
                         >
                             {message.type === 'assistant' && <Bot className="w-6 h-6 text-blue-500" />}
-                            <div
-                                className={`p-3 rounded-lg max-w-[80%] ${
-                                    message.type === 'user' 
-                                        ? 'bg-blue-500 text-white' 
-                                        : 'bg-gray-100'
-                                }`}
-                            >
-                                {message.content}
-                            </div>
+                            <FormattedMessage content={message.content} type={message.type} />
                             {message.type === 'user' && <User className="w-6 h-6 text-blue-500" />}
                         </div>
                     ))
@@ -138,7 +173,7 @@ const ChatAssistant = ({ selectedFolder, folderContents }) => {
                 {loading && (
                     <div className="flex items-center space-x-2">
                         <Bot className="w-6 h-6 text-blue-500" />
-                        <div className="bg-gray-100 rounded-lg p-3">
+                        <div className="bg-gray-100 rounded-lg p-4">
                             <div className="flex space-x-2">
                                 <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
                                 <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-100"></div>
@@ -176,52 +211,6 @@ const ChatAssistant = ({ selectedFolder, folderContents }) => {
     );
 };
 
-const formatMessage = (content) => {
-    if (!content) return '';
-  
-    // Helper function to wrap text in proper HTML tags
-    const wrapWithTag = (text, tag) => `<${tag}>${text}</${tag}>`;
-  
-    // Format the message with proper HTML structure
-    let formattedContent = content
-      // Handle paragraphs (double newlines)
-      .split('\n\n')
-      .map(para => wrapWithTag(para.trim(), 'p'))
-      .join('')
-      
-      // Handle numbered lists
-      .replace(/^\d+\.\s+(.+)$/gm, (match, item) => `<li>${item}</li>`)
-      .replace(/(<li>.*<\/li>\n?)+/g, list => `<ol>${list}</ol>`)
-      
-      // Handle bullet points
-      .replace(/^[-•]\s+(.+)$/gm, (match, item) => `<li>${item}</li>`)
-      .replace(/(<li>.*<\/li>\n?)+/g, list => `<ul>${list}</ul>`)
-      
-      // Handle headers
-      .replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, text) => {
-        const level = hashes.length;
-        return wrapWithTag(text, `h${level}`);
-      })
-      
-      // Handle bold text
-      .replace(/\*\*(.*?)\*\*/g, (match, text) => `<strong>${text}</strong>`)
-      
-      // Handle italic text
-      .replace(/\*(.*?)\*/g, (match, text) => `<em>${text}</em>`)
-      
-      // Handle code blocks
-      .replace(/`([^`]+)`/g, (match, code) => `<code>${code}</code>`);
-  
-    return formattedContent;
-  };
-  
-  const MessageContent = ({ content, type }) => {
-    return (
-      <div 
-        className={`prose max-w-none ${type === 'user' ? 'text-white prose-invert' : 'text-gray-800'}`}
-        dangerouslySetInnerHTML={{ __html: formatMessage(content) }}
-      />
-    );
-  };
+
 
 export default ChatAssistant;
