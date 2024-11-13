@@ -454,27 +454,66 @@ def send_chat_message():
             for msg in chat_history
         ])
 
-        prompt = f"""You are a research assistant helping with the following research materials.
-Your role is to provide insights, analysis, and answer questions about these materials.
+        # Customized prompt for research analysis
+        prompt = f"""You are a highly knowledgeable research assistant analyzing the contents of a research folder. 
+Your expertise spans academic research, scientific papers, and data analysis.
 
-Research Materials in this folder:
+Research Materials in Current Folder:
 {context}
 
-Recent Conversation:
+Previous Conversation:
 {chat_context}
 
-User question: {message}
+Your capabilities and responsibilities include:
 
-Please provide a clear, well-structured response based on the research materials and conversation history. 
-If the question cannot be directly answered using the available materials, acknowledge this and suggest what additional information might be helpful."""
+1. Analysis:
+   - Synthesizing information across multiple papers
+   - Identifying key themes and patterns
+   - Highlighting important findings and implications
+   - Comparing and contrasting different research approaches
+
+2. Critical Evaluation:
+   - Assessing methodology and research quality
+   - Identifying potential limitations or gaps
+   - Suggesting areas for further research
+   - Evaluating the strength of conclusions
+
+3. Practical Application:
+   - Suggesting real-world applications
+   - Identifying potential impact on the field
+   - Recommending implementation strategies
+   - Highlighting practical challenges
+
+4. Integration:
+   - Connecting findings across papers
+   - Building comprehensive understanding
+   - Identifying conflicting results
+   - Suggesting resolutions for contradictions
+
+5. Research Support:
+   - Suggesting related research areas
+   - Recommending additional sources
+   - Helping formulate research questions
+   - Providing literature review insights
+
+Current User Question: {message}
+
+Please provide a detailed, well-structured response that:
+- Directly addresses the user's question
+- References specific papers and findings where relevant
+- Maintains academic rigor and precision
+- Indicates any limitations in the available information
+- Suggests follow-up areas if needed
+
+Format your response with clear sections, bullet points where appropriate, and specific references to the research materials."""
 
         try:
-            # Use Claude 3.5 Sonnet as primary model
+            # Use Claude for research chat
             response = anthropic_client.messages.create(
                 model="claude-3-sonnet-20240229",
                 max_tokens=1000,
                 temperature=0.7,
-                system="You are a knowledgeable research assistant that excels at analyzing academic papers and research materials. You provide thorough, nuanced responses while maintaining academic rigor.",
+                system="You are a specialized research assistant with expertise in academic analysis and scientific research. You excel at synthesizing information, identifying patterns, and providing insightful, well-structured responses.",
                 messages=[{"role": "user", "content": prompt}]
             )
             ai_response = response.content[0].text
@@ -487,7 +526,7 @@ If the question cannot be directly answered using the available materials, ackno
                 response = openai_client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "system", "content": "You are a helpful research assistant that analyzes and discusses research papers and their contents."},
+                        {"role": "system", "content": "You are a specialized research assistant with expertise in academic analysis and scientific research."},
                         {"role": "user", "content": prompt}
                     ],
                     max_tokens=500,
@@ -504,26 +543,25 @@ If the question cannot be directly answered using the available materials, ackno
 
         # Save messages to database
         timestamp = datetime.utcnow()
+        message_data = {
+            'folder_id': ObjectId(folder_id),
+            'timestamp': timestamp,
+            'ai_provider': provider_used
+        }
         
         # Save user message
-        user_message = {
-            'folder_id': ObjectId(folder_id),
+        db.chat_messages.insert_one({
+            **message_data,
             'content': message,
-            'type': 'user',
-            'timestamp': timestamp,
-            'ai_provider': provider_used
-        }
-        db.chat_messages.insert_one(user_message)
+            'type': 'user'
+        })
         
         # Save assistant response
-        assistant_message = {
-            'folder_id': ObjectId(folder_id),
+        db.chat_messages.insert_one({
+            **message_data,
             'content': ai_response,
-            'type': 'assistant',
-            'timestamp': timestamp,
-            'ai_provider': provider_used
-        }
-        db.chat_messages.insert_one(assistant_message)
+            'type': 'assistant'
+        })
 
         return jsonify({
             'success': True,
